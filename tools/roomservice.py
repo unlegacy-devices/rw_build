@@ -297,43 +297,6 @@ def create_common_dependencies_manifest(dependencies):
                         create_common_dependencies_manifest(common_deps)
 
 
-def fetch_dependencies(device):
-    location = parse_device_from_folder(device)
-    if location is None or not os.path.isdir(location):
-        raise Exception("ERROR: could not find your device "
-                        "folder location, bailing out")
-    dependencies = parse_dependency_file(location)
-    check_manifest_problems(dependencies)
-    create_dependency_manifest(dependencies)
-    create_common_dependencies_manifest(dependencies)
-    fetch_device(device)
-
-def check_device_exists(device):
-    location = parse_device_from_folder(device)
-    if location is None:
-        return False
-    return os.path.isdir(location)
-
-
-def fetch_device(device):
-    if check_device_exists(device):
-        print("WARNING: Trying to fetch a device that's already there")
-    git_data = search_gerrit_for_device(device)
-    if git_data is not None:
-        device_url = git_data['id']
-        device_dir = parse_device_directory(device_url, device)
-        project = create_manifest_project(device_url,
-                                      device_dir,
-                                      remote=default_team_rem)
-        if project is not None:
-            manifest = append_to_manifest(project)
-            write_to_manifest(manifest)
-        # In case a project was written to manifest, but never synced
-        if project is not None or not check_target_exists(device_dir):
-            print("syncing the device config")
-            os.system('repo sync -f --no-clone-bundle %s' % device_dir)
-
-
 if __name__ == '__main__':
     if not os.path.isdir(local_manifest_dir):
         os.mkdir(local_manifest_dir)
@@ -348,7 +311,4 @@ if __name__ == '__main__':
         deps_only = sys.argv[2]
     else:
         deps_only = False
-
-    if not deps_only:
-        fetch_device(device)
-    fetch_dependencies(device)
+        
